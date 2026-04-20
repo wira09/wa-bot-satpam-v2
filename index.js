@@ -15,6 +15,7 @@ const CONFIG = require("./config");
 const db = require("./lib/database");
 const { formatNumber, resolveSenderToNumber } = require("./lib/utils");
 const { askDuckAI } = require("./api/duckai");
+const { askMuslimAI } = require("./api/muslimai");
 const { askArona } = require("./api/arona");
 const { askGPT } = require("./api/gpt");
 const { primbonCocokNamaPasangan, primbonArtiNama } = require("./api/primbon");
@@ -41,6 +42,9 @@ const { searchStickerly } = require("./api/stickerly");
 const { getJadwalSholat } = require("./api/jadwal-sholat");
 const { generateQRCode } = require("./api/qrcode");
 const { getTextToSpeech, getVoicesList } = require("./api/tts");
+const { searchPddikti } = require("./api/pddikti");
+const { searchKbbi } = require("./api/kbbi");
+const { searchWikipedia } = require("./api/wikipedia");
 const satpam = require("./lib/satpam");
 const { generateGoodbyeV5 } = require("./lib/goodbye");
 
@@ -399,12 +403,16 @@ async function startBot() {
             `🤖 *AI Assistant*\n` +
             `> ${CONFIG.prefix}gpt _(pertanyaan)_\n` +
             `> ${CONFIG.prefix}duckai _(pertanyaan)_\n` +
+            `> ${CONFIG.prefix}muslimai _(pertanyaan)_\n` +
             `> ${CONFIG.prefix}arona _(pertanyaan)_\n\n` +
             `📋 *Umum*\n` +
             `> ${CONFIG.prefix}menu\n` +
-            `> ${CONFIG.prefix}profile\n` +
+            `> ${CONFIG.prefix}profile\n\n` +
+            `📃 *Ilmu*\\n` +
+            `> ${CONFIG.prefix}kbbi _(kata)_\\n` +
+            `> ${CONFIG.prefix}wikipedia _(kata kunci)_\n\n` +
             `💪 *Motivasi*\n` +
-            `> ${CONFIG.prefix}quotes\n` +
+            `> ${CONFIG.prefix}quotes\n\n` +
             `📰 *Berita*\n` +
             `> ${CONFIG.prefix}berita-cnn\n` +
             `> ${CONFIG.prefix}berita-kompas\n` +
@@ -438,6 +446,7 @@ async function startBot() {
             `🔍 *Stalk*\n` +
             `> ${CONFIG.prefix}iplookup _(IP address)_\n` +
             `> ${CONFIG.prefix}github _(username)_\n` +
+            `> ${CONFIG.prefix}pddikti _(nama/nim)_\n` +
             `> ${CONFIG.prefix}subdomains _(domain)_\n\n` +
             `👑 *Admin Bot*\n` +
             `> ${CONFIG.prefix}addadmin _(nomor)_\n` +
@@ -492,6 +501,21 @@ async function startBot() {
         continue;
       }
 
+      if (command === "muslimai") {
+        const prompt = args.join(" ");
+        if (!prompt) {
+          await reply(
+            "❓ Tulis pertanyaan kamu setelah !muslimai\nContoh: !muslimai Siapa nama mu?",
+          );
+          continue;
+        }
+        await reply("⏳ Sedang menghubungi Muslim AI...");
+        const answer = await askMuslimAI(prompt);
+        const out = typeof answer === "string" ? answer : String(answer);
+        await reply(`☪️ *Muslim AI:*\n\n${out}`);
+        continue;
+      }
+
       if (command === "arona") {
         const prompt = args.join(" ");
         if (!prompt) {
@@ -538,6 +562,44 @@ Sekarang lagi sibuk kuliah sambil bikin portofolio, yang mana isi portofolionya 
 
 Info kontak: 083841407959 (WA). Kalau bot error atau mau tanya-tanya, silakan hubungi. Terima kasih.`,
         );
+        continue;
+      }
+
+      if (command === "pddikti") {
+        const query = args.join(" ");
+        if (!query) {
+          await reply(`❌ Gunakan: ${CONFIG.prefix}pddikti [nama/nim]`);
+          continue;
+        }
+        await reply("⏳ Sedang mencari data di PDDIKTI...");
+        const result = await searchPddikti(query);
+        await reply(result);
+        continue;
+      }
+
+      if (command === "kbbi") {
+        const query = args.join(" ");
+        if (!query) {
+          await reply(`❌ Gunakan: ${CONFIG.prefix}kbbi [kata]`);
+          continue;
+        }
+        await reply("⏳ Sedang mencari definisi di KBBI...");
+        const result = await searchKbbi(query);
+        await reply(result);
+        continue;
+      }
+
+      if (command === "wikipedia") {
+        const query = args.join(" ");
+        if (!query) {
+          await reply(
+            `❓ Gunakan: ${CONFIG.prefix}wikipedia [kata kunci]\\nContoh: ${CONFIG.prefix}wikipedia apa itu sawit`,
+          );
+          continue;
+        }
+        await reply("⏳ Sedang mencari informasi di Wikipedia...");
+        const result = await searchWikipedia(query);
+        await reply(result);
         continue;
       }
 
